@@ -27,34 +27,23 @@ _REFRESH_TOKEN = "0zeYA-PllRYp1tfrsq_w3vHGU1rPy237JMf5oDt73c4"
 
 def main():
     api = AppPixivAPI(**_REQUESTS_KWARGS)
-    # aapi.set_additional_headers({'Accept-Language':'en-US'})
-    api.set_accept_language("en-us")  # zh-cn
     api.auth(refresh_token=_REFRESH_TOKEN)
 
-    target_date = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
-    json_result = api.illust_ranking("day", date=target_date)
+    target_id = 275527
+    json_result = api.user_bookmarks_illust(target_id)
+    print_illusts(json_result.illusts[:3])
 
-    print(
-        "Printing image titles and tags with English tag translations present when available"
-    )
-    print_results(json_result.illusts[:3])
-
+    print(">> next_url: " + json_result.next_url)
     next_qs = api.parse_qs(json_result.next_url)
     if next_qs is not None:
-        print(">>> next page")
-        json_result = api.illust_ranking(**next_qs)
-        print_results(json_result.illusts[:3])
+        json_result = api.user_bookmarks_illust(**next_qs)
+        print_illusts(json_result.illusts[:3])
 
 
-def print_results(illusts):
+def print_illusts(illusts):
     for illust in illusts:
-        print(
-            'Illustration: "'
-            + str(illust.title)
-            + '"\nTags: '
-            + str(illust.tags)
-            + "\n"
-        )
+        print("[ID={illust.id}] {illust.title}".format(illust=illust))
+        print("    {illust.image_urls.large}".format(illust=illust))
 
 
 if __name__ == "__main__":
