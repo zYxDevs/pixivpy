@@ -102,9 +102,9 @@ class BasePixivAPI(object):
                     **self.requests_kwargs,
                 )
             else:
-                raise PixivError("Unknown method: %s" % method)
+                raise PixivError(f"Unknown method: {method}")
         except Exception as e:
-            raise PixivError("requests {} {} error: {}".format(method, url, e))
+            raise PixivError(f"requests {method} {url} error: {e}")
 
     def set_auth(self, access_token: str, refresh_token: str | None = None) -> None:
         self.access_token = access_token
@@ -144,7 +144,7 @@ class BasePixivAPI(object):
             # noinspection PyUnresolvedReferences
             auth_hosts = self.hosts  # BAPI解析成IP的场景
             headers_["host"] = "oauth.secure.pixiv.net"
-        url = "%s/auth/token" % auth_hosts
+        url = f"{auth_hosts}/auth/token"
         data = {
             "get_secure_url": 1,
             "client_id": self.client_id,
@@ -187,7 +187,7 @@ class BasePixivAPI(object):
             self.refresh_token = token.response.refresh_token
         except json.JSONDecodeError:
             raise PixivError(
-                "Get access_token error! Response: %s" % token,
+                f"Get access_token error! Response: {token}",
                 header=r.headers,
                 body=r.text,
             )
