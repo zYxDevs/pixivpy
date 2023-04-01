@@ -23,7 +23,7 @@ class PixivError(Exception):
         header: dict[str, Any] | CaseInsensitiveDict[Any] | None = None,
         body: str | None = None,
     ):
-        self.reason = str(reason)
+        self.reason = reason
         self.header = header
         self.body = body
         super(Exception, self).__init__(self, reason)

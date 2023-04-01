@@ -89,29 +89,22 @@ class AppPixivAPI(BasePixivAPI):
             headers_["app-os-version"] = "14.6"
             headers_["user-agent"] = "PixivIOSApp/7.13.3 (iOS 14.6; iPhone13,2)"
 
-        if not req_auth:
-            return self.requests_call(method, url, headers_, params, data)
-        else:
+        if req_auth:
             self.require_auth()
-            headers_["Authorization"] = "Bearer %s" % self.access_token
-            return self.requests_call(method, url, headers_, params, data)
+            headers_["Authorization"] = f"Bearer {self.access_token}"
+        return self.requests_call(method, url, headers_, params, data)
 
     def parse_result(self, res: Response) -> ParsedJson:
         try:
             return self.parse_json(res.text)
         except Exception as e:
-            raise PixivError(
-                "parse_json() error: %s" % e, header=res.headers, body=res.text
-            )
+            raise PixivError(f"parse_json() error: {e}", header=res.headers, body=res.text)
 
     @classmethod
     def format_bool(cls, bool_value: bool | str | None) -> _BOOL:
         if isinstance(bool_value, bool):
             return "true" if bool_value else "false"
-        if bool_value in {"true", "True"}:
-            return "true"
-        else:
-            return "false"
+        return "true" if bool_value in {"true", "True"} else "false"
 
     # 返回翻页用参数
     @classmethod
@@ -139,7 +132,7 @@ class AppPixivAPI(BasePixivAPI):
         filter: _FILTER = "for_ios",
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/detail" % self.hosts
+        url = f"{self.hosts}/v1/user/detail"
         params = {
             "user_id": user_id,
             "filter": filter,
@@ -157,7 +150,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/illusts" % self.hosts
+        url = f"{self.hosts}/v1/user/illusts"
         params = {
             "user_id": user_id,
             "filter": filter,
@@ -180,7 +173,7 @@ class AppPixivAPI(BasePixivAPI):
         tag: str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/bookmarks/illust" % self.hosts
+        url = f"{self.hosts}/v1/user/bookmarks/illust"
         params = {
             "user_id": user_id,
             "restrict": restrict,
@@ -200,11 +193,10 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/related" % self.hosts
+        url = f"{self.hosts}/v1/user/related"
         params = {
             "filter": filter,
-            # Pixiv warns to put seed_user_id at the end -> put offset here
-            "offset": offset if offset else 0,
+            "offset": offset or 0,
             "seed_user_id": seed_user_id,
         }
         r = self.no_auth_requests_call("GET", url, params=params, req_auth=req_auth)
@@ -218,7 +210,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v2/illust/follow" % self.hosts
+        url = f"{self.hosts}/v2/illust/follow"
         params: dict[str, str | int] = {
             "restrict": restrict,
         }
@@ -229,7 +221,7 @@ class AppPixivAPI(BasePixivAPI):
 
     # 作品详情 (类似PAPI.works()，iOS中未使用)
     def illust_detail(self, illust_id: int | str, req_auth: bool = True) -> ParsedJson:
-        url = "%s/v1/illust/detail" % self.hosts
+        url = f"{self.hosts}/v1/illust/detail"
         params = {
             "illust_id": illust_id,
         }
@@ -244,7 +236,7 @@ class AppPixivAPI(BasePixivAPI):
         include_total_comments: str | bool | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/illust/comments" % self.hosts
+        url = f"{self.hosts}/v1/illust/comments"
         params = {
             "illust_id": illust_id,
         }
@@ -265,7 +257,7 @@ class AppPixivAPI(BasePixivAPI):
         viewed: str | list[str] | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v2/illust/related" % self.hosts
+        url = f"{self.hosts}/v2/illust/related"
         params: dict[str, Any] = {
             "illust_id": illust_id,
             "filter": filter,
@@ -299,9 +291,9 @@ class AppPixivAPI(BasePixivAPI):
         req_auth: bool = True,
     ) -> ParsedJson:
         if req_auth:
-            url = "%s/v1/illust/recommended" % self.hosts
+            url = f"{self.hosts}/v1/illust/recommended"
         else:
-            url = "%s/v1/illust/recommended-nologin" % self.hosts
+            url = f"{self.hosts}/v1/illust/recommended-nologin"
         params: dict[str, Any] = {
             "content_type": content_type,
             "include_ranking_label": self.format_bool(include_ranking_label),
@@ -350,7 +342,7 @@ class AppPixivAPI(BasePixivAPI):
         include_privacy_policy: str | list[int | str] | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/novel/recommended" % self.hosts
+        url = f"{self.hosts}/v1/novel/recommended"
         params: dict[str, Any] = {
             "include_ranking_label": self.format_bool(include_ranking_label),
             "filter": filter,
@@ -387,7 +379,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/illust/ranking" % self.hosts
+        url = f"{self.hosts}/v1/illust/ranking"
         params: dict[str, Any] = {
             "mode": mode,
             "filter": filter,
@@ -403,7 +395,7 @@ class AppPixivAPI(BasePixivAPI):
     def trending_tags_illust(
         self, filter: _FILTER = "for_ios", req_auth: bool = True
     ) -> ParsedJson:
-        url = "%s/v1/trending-tags/illust" % self.hosts
+        url = f"{self.hosts}/v1/trending-tags/illust"
         params = {
             "filter": filter,
         }
@@ -430,7 +422,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/search/illust" % self.hosts
+        url = f"{self.hosts}/v1/search/illust"
         params: dict[str, Any] = {
             "word": word,
             "search_target": search_target,
@@ -469,7 +461,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/search/novel" % self.hosts
+        url = f"{self.hosts}/v1/search/novel"
         params: dict[str, Any] = {
             "word": word,
             "search_target": search_target,
@@ -496,7 +488,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/search/user" % self.hosts
+        url = f"{self.hosts}/v1/search/user"
         params: dict[str, Any] = {
             "word": word,
             "sort": sort,
@@ -513,7 +505,7 @@ class AppPixivAPI(BasePixivAPI):
     def illust_bookmark_detail(
         self, illust_id: int | str, req_auth: bool = True
     ) -> ParsedJson:
-        url = "%s/v2/illust/bookmark/detail" % self.hosts
+        url = f"{self.hosts}/v2/illust/bookmark/detail"
         params = {
             "illust_id": illust_id,
         }
@@ -528,7 +520,7 @@ class AppPixivAPI(BasePixivAPI):
         tags: str | list[str] | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v2/illust/bookmark/add" % self.hosts
+        url = f"{self.hosts}/v2/illust/bookmark/add"
         data = {
             "illust_id": illust_id,
             "restrict": restrict,
@@ -545,7 +537,7 @@ class AppPixivAPI(BasePixivAPI):
     def illust_bookmark_delete(
         self, illust_id: int | str, req_auth: bool = True
     ) -> ParsedJson:
-        url = "%s/v1/illust/bookmark/delete" % self.hosts
+        url = f"{self.hosts}/v1/illust/bookmark/delete"
         data = {
             "illust_id": illust_id,
         }
@@ -559,7 +551,7 @@ class AppPixivAPI(BasePixivAPI):
         restrict: _RESTRICT = "public",
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/follow/add" % self.hosts
+        url = f"{self.hosts}/v1/user/follow/add"
         data = {"user_id": user_id, "restrict": restrict}
         r = self.no_auth_requests_call("POST", url, data=data, req_auth=req_auth)
         return self.parse_result(r)
@@ -568,7 +560,7 @@ class AppPixivAPI(BasePixivAPI):
     def user_follow_delete(
         self, user_id: int | str, req_auth: bool = True
     ) -> ParsedJson:
-        url = "%s/v1/user/follow/delete" % self.hosts
+        url = f"{self.hosts}/v1/user/follow/delete"
         data = {"user_id": user_id}
         r = self.no_auth_requests_call("POST", url, data=data, req_auth=req_auth)
         return self.parse_result(r)
@@ -580,7 +572,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/bookmark-tags/illust" % self.hosts
+        url = f"{self.hosts}/v1/user/bookmark-tags/illust"
         params: dict[str, Any] = {
             "restrict": restrict,
         }
@@ -597,7 +589,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/following" % self.hosts
+        url = f"{self.hosts}/v1/user/following"
         params = {
             "user_id": user_id,
             "restrict": restrict,
@@ -616,7 +608,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/follower" % self.hosts
+        url = f"{self.hosts}/v1/user/follower"
         params = {
             "user_id": user_id,
             "filter": filter,
@@ -634,7 +626,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/mypixiv" % self.hosts
+        url = f"{self.hosts}/v1/user/mypixiv"
         params = {
             "user_id": user_id,
         }
@@ -652,7 +644,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v2/user/list" % self.hosts
+        url = f"{self.hosts}/v2/user/list"
         params = {
             "user_id": user_id,
             "filter": filter,
@@ -667,7 +659,7 @@ class AppPixivAPI(BasePixivAPI):
     def ugoira_metadata(
         self, illust_id: int | str, req_auth: bool = True
     ) -> ParsedJson:
-        url = "%s/v1/ugoira/metadata" % self.hosts
+        url = f"{self.hosts}/v1/ugoira/metadata"
         params = {
             "illust_id": illust_id,
         }
@@ -683,7 +675,7 @@ class AppPixivAPI(BasePixivAPI):
         offset: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/user/novels" % self.hosts
+        url = f"{self.hosts}/v1/user/novels"
         params = {
             "user_id": user_id,
             "filter": filter,
@@ -701,7 +693,7 @@ class AppPixivAPI(BasePixivAPI):
         last_order: str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v2/novel/series" % self.hosts
+        url = f"{self.hosts}/v2/novel/series"
         params = {
             "series_id": series_id,
             "filter": filter,
@@ -713,7 +705,7 @@ class AppPixivAPI(BasePixivAPI):
 
     # 小说详情
     def novel_detail(self, novel_id: int | str, req_auth: bool = True) -> ParsedJson:
-        url = "%s/v2/novel/detail" % self.hosts
+        url = f"{self.hosts}/v2/novel/detail"
         params = {
             "novel_id": novel_id,
         }
@@ -727,7 +719,7 @@ class AppPixivAPI(BasePixivAPI):
         max_novel_id: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/novel/new" % self.hosts
+        url = f"{self.hosts}/v1/novel/new"
         params: dict[str, Any] = {
             "filter": filter,
         }
@@ -738,7 +730,7 @@ class AppPixivAPI(BasePixivAPI):
 
     # 小说正文
     def novel_text(self, novel_id: int | str, req_auth: bool = True) -> ParsedJson:
-        url = "%s/v1/novel/text" % self.hosts
+        url = f"{self.hosts}/v1/novel/text"
         params = {
             "novel_id": novel_id,
         }
@@ -755,7 +747,7 @@ class AppPixivAPI(BasePixivAPI):
         max_illust_id: int | str | None = None,
         req_auth: bool = True,
     ) -> ParsedJson:
-        url = "%s/v1/illust/new" % self.hosts
+        url = f"{self.hosts}/v1/illust/new"
         params: dict[str, Any] = {
             "content_type": content_type,
             "filter": filter,
